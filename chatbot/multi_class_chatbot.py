@@ -176,7 +176,6 @@ def run_bot():
             break
         que_array = process_input_string(question)
         pred_array = model.predict(que_array)[0]
-        print(pred_array)
         pred = np.argmax(pred_array)
         if pred+1 in ans_dictionary:
             ans = ans_dictionary[pred+1]
