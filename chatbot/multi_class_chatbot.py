@@ -143,23 +143,23 @@ X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
 def create_model(X_train, y_train, nepochs, batch_size):
     
     classifier = Sequential()
-    classifier.add(LSTM(units=50, return_sequences=True, input_shape=(X_train.shape[1],1)))
+    classifier.add(LSTM(units=20, return_sequences=True, input_shape=(X_train.shape[1],1)))
     classifier.add(Dropout(0.2))
-    classifier.add(LSTM(units=50, return_sequences=False))
-    classifier.add(Dropout(0.2))
+    classifier.add(LSTM(units=20, return_sequences=False))
+    #classifier.add(Dropout(0.2))
     #classifier.add(LSTM(units=50))
     #classifier.add(Dropout(0.2))
-    classifier.add(Dense(units=40))
+    classifier.add(Dense(units=40, activation='softmax'))
     
     classifier.compile(optimizer='adam', loss='categorical_crossentropy')
-    
+    print(classifier.summary())
     classifier.fit(X_train, y_train, epochs = nepochs, batch_size=batch_size)
     
     return classifier
 
 
 # Initializing some parameters
-no_of_epochs = 50
+no_of_epochs = 150
 batch_size = 4
 
 
