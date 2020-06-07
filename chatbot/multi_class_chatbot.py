@@ -165,8 +165,6 @@ batch_size = 4
 
 model = create_model(X_train, y_train, no_of_epochs, batch_size)
 
-pred = model.predict(process_input_string("what is covid19"))
-
 
 def run_bot():    
     print("Enter 'bye' to exit")
@@ -177,10 +175,12 @@ def run_bot():
         que_array = process_input_string(question)
         pred_array = model.predict(que_array)[0]
         pred = np.argmax(pred_array)
-        if pred+1 in ans_dictionary:
+        #print(np.max(pred_array))
+        if np.max(pred_array) > 0.6:
             ans = ans_dictionary[pred+1]
         else:
             ans = "Sorry the bot coundn't answer that. Ask a different question."
         print('ChatBot: ' + ans)
 
 run_bot()
+
