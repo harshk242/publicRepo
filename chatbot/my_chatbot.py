@@ -10,6 +10,7 @@ import numpy as np
 import re
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, LSTM
+from keras.preprocessing.sequence import pad_sequences
 
 dataset = pd.read_excel("D:\DOWNLOADS\COVID-19-dataset.xlsx")
 lastCol = 41
@@ -83,7 +84,7 @@ word2count = word_count(que_train[:,0])
 
 def word_to_id(word2count, threshold):
     word2int = {}
-    counter = 0
+    counter = 1
     for word, count in word2count.items():
         if count > threshold:
             word2int[word] = counter
@@ -111,59 +112,56 @@ def que_to_int(que_train, word2int):
 
 que_array = que_to_int(que_train, word2int)
 
-print(que_array)
-xdum = np.array([[1,2,3],[2,3],[5,6,43,2]])
-ydum = np.array([1,2,3])
-sorted_arr = []
-#for i in enumerate(que_array):
-    #print(que_array[i[0]])
+def pad_input_array(que_array, max_length):
+    padded = pad_sequences(que_array, maxlen=max_length, padding='post')
+    return np.array(padded)
 
-X_train = np.reshape(que_array, (que_array.shape[0], 1, 1))
+X_train = pad_input_array(que_array, 18)
+X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
 
+def create_model(X_train, y_train, nepochs, batch_size):
+    
+    classifier = Sequential()
+    classifier.add(LSTM(units=20, return_sequences=True, input_shape=(X_train.shape[1],1)))
+    classifier.add(LSTM(units=20, return_sequences=True))
+    classifier.add(LSTM(units=20))
+    
+    classifier.add(Dense(units=1))
+    
+    classifier.compile(optimizer='adam', loss='mean_squared_error')
+    
+    classifier.fit(X_train, y_train, epochs = nepochs, batch_size=batch_size)
+    
+    return classifier
 
-classifier = Sequential()
+model = create_model(X_train, y_train, 250, 5)
 
-classifier.add(LSTM(units=20, return_sequences=True, input_shape=(X_train.shape[1],1)))
-classifier.add(LSTM(units=20, return_sequences=True))
-classifier.add(LSTM(units=20))
+def process_input_string(text):
+    text = clean_text(text)
+    text_arr = []
+    for word in text.split():
+        if word in word2int:
+            text_arr.append(word2int[word])
+        else:
+            text_arr.append(0)
+    
+    padded_text = pad_sequences([np.array(text_arr)], maxlen=18, padding='post')
+    final_text = np.reshape(padded_text, (padded_text.shape[0], padded_text.shape[1], 1))
+    return final_text
 
-classifier.add(Dense(units=1))
+def run_bot():    
+    print("Enter 'bye' to exit")
+    while(True):
+        question = input("You: ")
+        if "bye" in question.lower():
+            break
+        que_array = process_input_string(question)
+        pred = model.predict(que_array)[0][0]
+        pred = round(pred)
+        if pred in ans_dictionary:
+            ans = ans_dictionary[pred]
+        else:
+            ans = "Sorry the bot coundn't answer that. Ask a different question."
+        print('ChatBot: ' + ans)
 
-classifier.compile(optimizer='adam', loss='mean_squared_error')
-
-classifier.fit(X_train, y_train, epochs =50, batch_size=5)
-
-# Error in classifier bcoz train data is a list and now numpy array
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+run_bot()
